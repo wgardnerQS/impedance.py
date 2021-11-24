@@ -157,7 +157,7 @@ def readBioLogic(filename):
     number_header_lines = int(header_line.split(":")[1])
 
     # find the freq and Z columns
-    headers = lines[number_header_lines-1].split('\t')
+    headers = lines[number_header_lines-1].rstrip().split('\t')
 
     freq_cols = [o for o, h in enumerate(headers) if h == 'freq/Hz']
     ReZ_cols = [o for o, h in enumerate(headers) if h == 'Re(Z)/Ohm']
