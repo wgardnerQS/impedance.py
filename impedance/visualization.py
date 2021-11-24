@@ -319,3 +319,64 @@ def plot_residuals(ax, f, res_real, res_imag, fmt='.-', y_limits=(-5, 5),
     ax.set_xlim(np.min(f), np.max(f))
 
     return ax
+
+
+def plot_z_z(axes, f, Z, scale=1, units='Ohms', fmt='.-', **kwargs):
+    """ Plots impedance as a Z'-Z'' plot using matplotlib
+        Parameters
+        ----------
+        axes: list of 2 matplotlib.axes.Axes
+            axes on which to plot the bode plot
+        f: np.array of floats
+            frequencies
+        Z: np.array of complex numbers
+            impedance data
+        scale: float
+            scale for the magnitude y-axis
+        units: string
+            units for :math:`|Z(\\omega)|`
+        fmt: string
+            format string passed to matplotlib (e.g. '.-' or 'o')
+        Other Parameters
+        ----------------
+        **kwargs : `matplotlib.pyplot.Line2D` properties, optional
+            Used to specify line properties like linewidth, line color,
+            marker color, and line labels.
+        Returns
+        -------
+        ax: matplotlib.axes.Axes
+    """
+
+    ax_r, ax_i = axes
+
+    ax_r.plot(f, np.real(Z), fmt, **kwargs)
+    ax_i.plot(f, -np.imag(Z), fmt, **kwargs)
+
+    # Set the y-axis labels
+    ax_r.set_ylabel(r'$Z^{\prime}(\omega)$ ' +
+                    '$[{}]$'.format(units), fontsize=20)
+    ax_i.set_ylabel(r'$-Z^{\prime\prime}(\omega)$ ', fontsize=20)
+
+    for ax in axes:
+        # Set the frequency axes title and make log scale
+        ax.set_xlabel('f [Hz]', fontsize=20)
+        ax.set_xscale('log')
+
+        # Make the tick labels larger
+        ax.tick_params(axis='both', which='major', labelsize=14)
+
+        # Change the number of labels on each axis to five
+        ax.locator_params(axis='y', nbins=5, tight=True)
+
+        # Add a light grid
+        ax.grid(b=True, which='major', axis='both', alpha=.5)
+
+    # Change axis units to 10**log10(scale) and resize the offset text
+    limits = -np.log10(scale)
+    if limits != 0:
+        ax_r.ticklabel_format(style='sci', axis='y',
+                              scilimits=(limits, limits))
+    y_offset = ax_r.yaxis.get_offset_text()
+    y_offset.set_size(18)
+
+    return axes

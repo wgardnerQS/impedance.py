@@ -357,6 +357,67 @@ def T(p, f):
     return Z
 
 
+@element_metadata(num_params=3, units=['Ohm', 'Hz', ''])
+def ZARC(p, f):
+    """ defines a ZARC element [1]
+
+    Notes
+    -----
+    .. math::
+
+        Z = \\frac{R}{1+(j \\frac{f}{f_c})^{\\alpha}}
+
+    where :math:`R` = p[0] and :math:`f_c` = p[1].
+
+    [1] Sam Buteau and J. R. Dahn 2019 J. Electrochem. Soc. 166 A1611
+    `<https://doi.org/10.1149/2.1051908jes>`
+    """
+    f = np.array(f)
+    R, f_c, alpha = p[0], p[1], p[2]
+    Z = R / (1 + (1j*f/f_c)**alpha)
+    return Z
+
+
+@element_metadata(num_params=6, units=['Ohm', 'm^2/s', 'm^2/s', 's^-1',
+                                       's^-1', 'm'])
+def Gu(p, f):
+    """ defines a Gerischer element with unequal diffusion coefficients [1]
+
+    Notes
+    -----
+
+    where :math:`\\sigma_G` = p[0],  :math:`D_A` = p[1], :math:`D_B` = p[2],
+        :math: `k_1` = p[3], :math: `k_2` = p[4], and :math: `d` = p[5]
+
+    [1] V.V. Pototskaya, O.I. Gichan 2019 J. Electroanal. chem. 852 113511
+    `<https://doi.org/10.1016/j.jelechem.2019.113511>`
+    """
+    omega = 2*np.pi*np.array(f)
+    sig_g, D_A, D_B, k_1, k_2, d = p[0], p[1], p[2], p[3], p[4], p[5]
+
+    Psi = (1/2)*(k_1 / D_B + k_2 / D_A + 1j * omega * (1 / D_B + 1 / D_A))
+
+    Psi_1 = (1/2)*(k_1 / D_B - k_2 / D_A + 1j * omega * (1 / D_B - 1 / D_A))
+
+    W = (0.5 * ((k_1 / D_B + k_2 / D_A)**2 + 2 * 1j * omega
+                * (k_1 / D_B - k_2 / D_A) * (1 / D_B - 1 / D_A)
+                - omega**2 * (1 / D_B - 1 / D_A)**2)**0.5)
+
+    r_1 = (Psi + W)**0.5
+    r_2 = (Psi - W)**0.5
+
+    alpha_1 = (Psi_1 + W) * D_A / k_1
+    alpha_2 = (Psi_1 - W) * D_A / k_1
+
+    Upsilon = ((1/(alpha_1 - alpha_2))
+               * ((alpha_1 * np.tanh(r_2 * d) / (r_2 * d))
+                  - (alpha_2 * np.tanh(r_1 * d) / (r_1 * d))))
+
+    Z = sig_g * Upsilon
+
+    return Z
+
+
 circuit_elements = {key: eval(key) for key in set(globals())-set(initial_state)
                     if key not in non_element_functions}
 
