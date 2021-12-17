@@ -168,6 +168,26 @@ def Ws(p, f):
     Z = Z0*np.tanh(np.sqrt(1j*omega*tau))/np.sqrt(1j*omega*tau)
     return Z
 
+@element_metadata(num_params=3, units=['Ohm', 'sec', ''])
+def Wf(p, f):
+    """ defines a fractal (finite-length) Warburg element
+
+    Notes
+    ---------
+    .. math::
+        Z = \\frac{Z_0}{{ (j \\omega \\tau)^\\alpha }}
+        \\tanh{{(j \\omega \\tau)^\\alpha }}
+
+    where :math:`Z_0` = p[0] (Ohms) and
+    :math:`\\tau` = p[1] (sec) = :math:`\\frac{L^2}{D}` and
+    :math:`\\alpha` = p[2] , <= 0.5
+
+    """
+    omega = 2*np.pi*np.array(f)
+    Z0, tau, alpha = p[0], p[1], p[2]
+    Z = Z0*np.tanh((1j*omega*tau)**alpha)/((1j*omega*tau)**alpha)
+    return Z
+
 
 @element_metadata(num_params=2, units=['Ohm^-1 sec^a', ''])
 def CPE(p, f):
